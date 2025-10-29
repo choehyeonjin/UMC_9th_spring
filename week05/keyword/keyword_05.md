@@ -128,13 +128,12 @@
       | **예시** | 변경 감지(Dirty Checking) 후 update 쿼리 전송 | DB에 변경사항 영구 반영 |
 ---
 - **QueryDSL, OpenFeign의 QueryDSL**
+1. QueryDSL
 
-    1. QueryDSL (JPA용)
-
-  JPA에서 JPQL을 타입 안전하게 자바 코드로 작성할 수 있게 해주는 쿼리 빌더 라이브러리.
-
-  → 문자열이 아닌 코드로 작성하므로, 컴파일 시점에 문법 오류를 잡을 수 있음.
-
+    JPA에서 JPQL을 타입 안전하게 자바 코드로 작성할 수 있게 해주는 쿼리 빌더 라이브러리.
+    
+    → 문자열이 아닌 코드로 작성하므로, 컴파일 시점에 문법 오류를 잡고, IDE 자동완성 지원.
+    
     ```java
     QMember m = QMember.member;
     
@@ -144,31 +143,31 @@
         .fetch();
     ```
 
-    1. OpenFeign의 Query DSL
+2. 개발 중단 및 보안 이슈
 
-       OpenFeign은 서버 간 HTTP 통신을 쉽게 하는 REST 클라이언트 라이브러리.
+   마지막 공식 버전: 5.1.0 (2024.01 릴리스 이후 업데이트 없음)
 
-       여기서의 “Query DSL”은 API 호출 시 쿼리 파라미터(요청 URL의 ?뒤 부분)를 동적으로 조합하는 기능을 의미함.
+   보안 취약점:
 
-        ```java
-        @FeignClient(name = "storeClient", url = "https://api.example.com")
-        public interface StoreClient {
-            @GetMapping("/stores")
-            List<StoreResponse> getStores(@RequestParam("region") String region,
-                                          @RequestParam("keyword") String keyword);
-        }
-        ```
+    - 사용자 입력값이 `PathBuilder`를 통해 쿼리에 직접 반영될 때 SQL Injection 위험 발생
 
-    2. 비교
+   유지보수 현황:
 
-        | 구분 | **QueryDSL (JPA)** | **OpenFeign의 Query DSL** |
-        | --- | --- | --- |
-        | **목적** | DB 조회용 쿼리 빌더 | HTTP 요청 파라미터 빌더 |
-        | **대상** | 데이터베이스 (엔티티 기반) | REST API (URL 기반) |
-        | **핵심 키워드** | JPQL, Entity, where, join | RequestParam, QueryMap |
-        | **동작 위치** | 서버 내부 (Repository 계층) | 서버 간 통신 (Client 계층) |
-        | **형태** | `queryFactory.selectFrom(...)` | `@GetMapping("/api")` |
+    - 공식적으로 중단 선언은 없지만,
 
+      새로운 기능/버전/보안 패치는 사실상 멈춤 상태
+
+    결과:
+    
+    - 안정성, 보안성, 최신 자바/Spring과의 호환성 문제로 **대체 필요성 증가**
+3. OpenFeign의 Query DSL
+
+   Netflix의 OpenFeign 팀이 포크(fork)하여 새롭게 관리 중인 QueryDSL 프로젝트.
+
+   → 기존 QueryDSL 문법을 그대로 유지하면서 보안 패치 + 성능 개선 + 최신 Java/Spring 호환성 강화 버전.
+
+   → 코드 수정 없이 의존성만 바꾸면 바로 전환 가능 (Q클래스 패키지 구조 동일)
+    
 ---
 - **N+1 문제 해결할 수 있는 여러 방안들**
 
